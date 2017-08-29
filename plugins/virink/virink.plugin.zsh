@@ -65,25 +65,22 @@ function clearpyc(){
 }
 alias clspyc='clearpyc'
 
+function lrsync(){
+    ls -al ~/Workspace/Plists
+}
+
 function mrsync(){
-    local fp="$2"
-    if [ ! -f "$fp" ]; then
-        if [ "`pwd`" != "~/Workspace/Plists" ]; then
-            fp="~/Workspace/Plists/$fp"
-        else
-            echo "Error : file not exists!"
-            return
-        fi
-    fi
+    local fp="/Users/virink/Workspace/Plists/$2.plist"
     if [ "$1" = "load" ]; then
         launchctl load -w $fp
     elif [ "$1" = "unload" ]; then
         launchctl unload $fp
     else
         echo "mrsync [load,unload] filepath"
+        lrsync()
         return
     fi
-    echo "launchctl $1 -w $fp"
+    echo "launchctl $1 [-w] $fp"
 }
 
 # OfficeThinner
