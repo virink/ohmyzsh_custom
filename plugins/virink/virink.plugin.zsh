@@ -3,6 +3,10 @@
 ############################
 . $ZSH_CUSTOM/z.sh
 
+if [ -f "$ZSH_CUSTOM/config.sh" ]; then
+  . $ZSH_CUSTOM/config.sh
+fi
+
 C_END="\033[0m"
 C_BRED="\033[31m\033[01m"
 C_GREEN="\033[32m"
@@ -26,7 +30,6 @@ trap 'test -n "$SSH_AGENT_PID" && eval `/usr/bin/ssh-agent -k` > /dev/null' 0
 # export HOMEBREW_BOTTLE_DOMAIN=https://mirrors.ustc.edu.cn/homebrew-bottles
 export HOMEBREW_BOTTLE_DOMAIN=https://mirrors.tuna.tsinghua.edu.cn/homebrew-bottles
 export HOMEBREW_NO_AUTO_UPDATE=true
-export HOMEBREW_GITHUB_API_TOKEN="89270d1b8578e9be02fd54a292c201d818bf6ee2"
 export ELECTRON_MIRROR=http://npm.taobao.org/mirrors/electron/
 # export ANDROID_SDK_HOME=/Users/virink/Library/Android/sdk
 export ANDROID_SDK_ROOT="/usr/local/share/android-sdk"
@@ -83,51 +86,6 @@ else
 fi
 
 ############################
-# alias
-############################
-alias cls='clear'
-alias ll='ls -alh'
-alias grep="grep --color=auto"
-alias vi='vim'
-alias rm='trash'
-alias sed='LANG=C LC_CTYPE=C sed'
-# alias electron='/Applications/Electron.app/Contents/MacOS/Electron'
-# oh-my-zsh
-alias szsh='source ~/.zshrc'
-alias stzsh='st ~/.zshrc'
-alias stvp='st $ZSH_CUSTOM/plugins/virink/virink.plugin.zsh'
-alias stvt='st $ZSH_CUSTOM/themes/virink.zsh-theme'
-alias pc4='proxychains4'
-alias py='python3'
-alias py2='python2'
-alias javac="javac -J-Dfile.encoding=utf8"
-alias service='brew services'
-# Tree
-alias tree="find . -print | sed -e 's;[^/]*/;|____;g;s;____|; |;g'"
-# Language
-alias lgbk='export LANG=zh_CN.GBK'
-# alias lutf8='export lang=zh_CN.UTF-8'
-alias lutf8='export LANG=en_US.UTF-8'
-# Nasm
-alias nasmd='nasm -f macho64'
-alias ldd='ld -e _start'
-
-alias gchrome="/Applications/Google\ Chrome.app/Contents/MacOS/Google\ Chrome"
-alias pcscli='pcs-console'
-alias dcp='docker-compose'
-
-# alias sqlmap='python2 /usr/local/bin/sqlmap'
-alias onpm=/usr/local/bin/npm
-alias npm=/usr/local/bin/cnpm
-
-alias luarocks='luarocks --lua-dir=/usr/local/opt/lua@5.1'
-alias luarocks51='luarocks --lua-dir=/usr/local/opt/lua@5.1'
-
-alias vv='source `pwd`/venv/bin/activate'
-alias stpc4='st /usr/local/etc/proxychains.conf'
-
-alias codeql='/Users/virink/Program/codeql/codeql'
-############################
 # Custom Scripts
 ############################
 # vCommand add to alias
@@ -173,14 +131,11 @@ function acmehelp(){
     fi
 }
 
-alias stpac="st ~/.vproxy/pac/user-rules.txt"
 function pac(){
     local pacfile="~/.vproxy/pac/user-rules.txt"
     if [ ! -f $pacfile ]; then
         eval touch $pacfile
     fi
-    # genpac --pac-proxy "SOCKS5 127.0.0.1:1080" --gfwlist-disabled \
-    # genpac --pac-proxy "http 127.0.0.1:3213;" \
     genpac --pac-proxy "SOCKS5 127.0.0.1:1080; SOCKS 127.0.0.1:1080;DIRECT;" \
         --gfwlist-proxy="SOCKS5 127.0.0.1:1080" \
         --gfwlist-url="https://raw.githubusercontent.com/gfwlist/gfwlist/master/gfwlist.txt" \
@@ -189,7 +144,6 @@ function pac(){
         --user-rule-from="~/.vproxy/pac/user-rules.txt" \
         --output="~/.vproxy/proxy.pac"
 }
-alias vproxy="~/.vproxy/vproxy_sysconf"
 function proxy(){
     if [[ "$1" = "t" ]]; then
         local url=""
@@ -198,10 +152,7 @@ function proxy(){
         else
             url="$2"
         fi
-        # echo "[+] Generate random file (1M)..."
         dd if=/dev/urandom of=/tmp/testbin bs=1024 count=1024 2>/dev/null >/dev/null
-        # curl -vv -o /dev/null -s -w '%{time_namelookup} %{time_connect} %{time_starttransfer} %{time_total} %{speed_upload} %{speed_download}' -F file=@/tmp/testbin 
-        # echo "[+] Start curl $url ..."
         data=$(curl -x "http://127.0.0.1:1086" -o /dev/null -k -s -w '%{time_namelookup} %{time_connect} %{time_starttransfer} %{time_total} %{speed_upload} %{speed_download}' -F file=@/tmp/testbin $url)
         rm -f /tmp/testbin
         dwi=0
@@ -273,14 +224,12 @@ function clearpjt(){
     find `pwd` -type d -name "__MACOSX" -exec rm -rf {} \;
     echo "Successfully"
 }
-alias clspjt='clearpjt'
 
 function clearnpm(){
     echo "Deleting node_modules ..."
     find `pwd` -type d -name "node_modules" -exec rm -rf {} \;
     echo "Successfully"
 }
-alias clsnpm='clearnpm'
 
 function stvh(){
     st ~/SourceCodes/vhost
@@ -290,8 +239,6 @@ function filenum(){
     echo "There are `ls -lR|grep "^-"|wc -l`   files in `pwd`"
 }
 
-alias vscode="/Applications/Visual Studio Code.app/Contents/Resources/app/bin/code"
-alias vsc=vscode
 
 # show my ip
 function myip(){
@@ -315,26 +262,10 @@ function mgd() {
 # Socks5 Proxy
 function ssup() {
     export ALL_PROXY=http://127.0.0.1:1086
-    # export ALL_PROXY=http://127.0.0.1:3213
 }
 
 function ssdown() {
     unset ALL_PROXY
-}
-
-# Chrome
-alias chromenossl="/Applications/Google Chrome.app/Contents/MacOS/Google Chrome --args --ignore-certificate-errors --allow-running-insecure-content"
-alias chromeport="/Applications/Google Chrome.app/Contents/MacOS/Google Chrome --args --explicitly-allowed-ports="
-
-# function chromeport() {
-#     local port=$@
-#     /Applications/Google\ Chrome.app/Contents/MacOS/Google\ Chrome --args --explicitly-allowed-ports=${port}
-# }
-
-
-# source `pwd`/myself.sh
-function gi() { 
-    curl -o .gitignore -L -s "https://www.gitignore.io/api/$@" ;
 }
 
 # OfficeThinner
@@ -351,3 +282,61 @@ function dex2jar (){
 function diffmerge() {
     exec /Applications/DiffMerge.app/Contents/MacOS/DiffMerge --nosplash  "$@"
 }
+
+############################
+# alias
+############################
+# oh-my-zsh
+alias szsh='source ~/.zshrc'
+alias stzsh='st ~/.zshrc'
+alias stvp='st $ZSH_CUSTOM/plugins/virink/virink.plugin.zsh'
+alias stvt='st $ZSH_CUSTOM/themes/virink.zsh-theme'
+# bin
+alias ll='ls -alh'
+alias grep="grep --color=auto"
+alias vi='vim'
+alias rm='trash'
+# Clear
+alias cls='clear'
+alias clspjt='clearpjt'
+alias clsnpm='clearnpm'
+
+alias sed='LANG=C LC_CTYPE=C sed'
+# alias electron='/Applications/Electron.app/Contents/MacOS/Electron'
+alias javac="javac -J-Dfile.encoding=utf8"
+alias service='brew services'
+# Tree
+alias tree="find . -print | sed -e 's;[^/]*/;|____;g;s;____|; |;g'"
+# Language
+alias lgbk='export LANG=zh_CN.GBK'
+# alias lutf8='export lang=zh_CN.UTF-8'
+alias lutf8='export LANG=en_US.UTF-8'
+# Nasm
+alias nasmd='nasm -f macho64'
+alias ldd='ld -e _start'
+
+alias dcp='docker-compose'
+
+alias onpm=/usr/local/bin/npm
+alias npm=/usr/local/bin/cnpm
+
+alias luarocks='luarocks --lua-dir=/usr/local/opt/lua@5.1'
+alias luarocks51='luarocks --lua-dir=/usr/local/opt/lua@5.1'
+
+# Proxy
+alias stpac="st ~/.vproxy/pac/user-rules.txt"
+alias vproxy="~/.vproxy/vproxy_sysconf"
+alias pc4='proxychains4'
+alias stpc4='st /usr/local/etc/proxychains.conf'
+
+# Chrome
+alias gchrome="/Applications/Google\ Chrome.app/Contents/MacOS/Google\ Chrome"
+alias chromenossl="gchrome --args --ignore-certificate-errors --allow-running-insecure-content"
+alias chromeport="gchrome --args --explicitly-allowed-ports="
+
+alias vv='source `pwd`/venv/bin/activate'
+
+alias codeql='/Users/virink/Program/codeql/codeql'
+alias pcscli='pcs-console'
+alias vscode="/Applications/Visual Studio Code.app/Contents/Resources/app/bin/code"
+alias vsc=vscode
