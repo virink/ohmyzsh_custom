@@ -4,98 +4,96 @@
 . $ZSH_CUSTOM/z.sh
 
 if [ -f "$ZSH_CUSTOM/config.sh" ]; then
-  . $ZSH_CUSTOM/config.sh
+    . $ZSH_CUSTOM/config.sh
 fi
 
-C_END="\033[0m"
-C_BRED="\033[31m\033[01m"
-C_GREEN="\033[32m"
-
 if [ -f "${HOME}/.gpg-agent-info" ]; then
-  . "${HOME}/.gpg-agent-info"
-  export GPG_AGENT_INFO
+    . "${HOME}/.gpg-agent-info"
+    export GPG_AGENT_INFO
 fi
 export GPG_TTY=$(tty)
 
 # SSH Agent
-eval $(ssh-agent -s) > /dev/null
-for i in $(ls ~/.ssh/*rsa | grep -E '.*?rsa$'); do
-    ssh-add $i > /dev/null 2>&1
-done
-trap 'test -n "$SSH_AGENT_PID" && eval `/usr/bin/ssh-agent -k` > /dev/null' 0
-
+if [ -f "${HOME}/.ssh/.agent" ]; then
+    source ${HOME}/.ssh/.agent
+fi
+ps -p $SSH_AGENT_PID > /dev/null
+if [ $? -ne 0 ]; then
+    eval $(ssh-agent -s) > /dev/null
+    echo "export SSH_AUTH_SOCK=$SSH_AUTH_SOCK" > ${HOME}/.ssh/.agent
+    echo "export SSH_AGENT_PID=$SSH_AGENT_PID" >> ${HOME}/.ssh/.agent  
+fi
 # export MANPATH="/usr/local/opt/coreutils/libexec/gnuman:$MANPATH"
 
 # Homebrew
 # export HOMEBREW_BOTTLE_DOMAIN=https://mirrors.ustc.edu.cn/homebrew-bottles
 export HOMEBREW_BOTTLE_DOMAIN=https://mirrors.tuna.tsinghua.edu.cn/homebrew-bottles
 export HOMEBREW_NO_AUTO_UPDATE=true
-export ELECTRON_MIRROR=http://npm.taobao.org/mirrors/electron/
-# export ANDROID_SDK_HOME=/Users/virink/Library/Android/sdk
+# Android
 export ANDROID_SDK_ROOT="/usr/local/share/android-sdk"
 export ANDROID_NDK_HOME="/usr/local/share/android-ndk"
-# export ANDROID_NDK_HOME=${ANDROID_SDK_ROOT}/ndk-bundle
-
-# antSword AS_WORKDIR
-export AS_WORKDIR=/Users/virink/Workspace/antSword/Core
-
+# Electron
+export ELECTRON_MIRROR=http://npm.taobao.org/mirrors/electron/
 # JAVA_HOME
-export JAVA_HOME=/Library/Java/JavaVirtualMachines/jdk1.8.0_181.jdk/Contents/Home
+# jdk8
+export JAVA_HOME=/Library/Java/Home
+# jdk14
+# export JAVA_HOME="/usr/local/opt/java/libexec/openjdk.jdk/Contents/Home"
 export JRE_HOME=$JAVA_HOME/jre
 export CLASSPAHT=.:$JAVA_HOME/lib/dt.jar:$JAVA_HOME/lib/tools.jar
-
+# Tomcat
+export TOMCAT_HOME=/usr/local/opt/tomcat@8/libexec
+export CATALINA_HOME=$TOMCAT_HOME
+# RUST
+export RUSTUP_DIST_SERVER=http://mirrors.ustc.edu.cn/rust-static
+export RUSTUP_UPDATE_ROOT=http://mirrors.ustc.edu.cn/rust-static/rustup
 # GO
+export GOARCH=amd64
 export GOROOT="/usr/local/opt/go/libexec"
 export GOPATH="/usr/local/src/go"
 export GOROOT_BOOTSTRAP=GOROOT
 export GO111MODULE=on
-export GOPROXY=https://goproxy.io
+export GOPROXY=https://goproxy.cn,https://goproxy.io,direct
 # export CSC_IDENTITY_AUTO_DISCOVERY=false
-
-export TOMCAT_HOME=/usr/local/opt/tomcat@8/libexec
-export CATALINA_HOME=$TOMCAT_HOME
-
 # FLUTTER
-export PUB_HOSTED_URL=https://pub.flutter-io.cn
-export FLUTTER_STORAGE_BASE_URL=https://storage.flutter-io.cn
+# export PUB_HOSTED_URL=https://pub.flutter-io.cn
+# export FLUTTER_STORAGE_BASE_URL=https://storage.flutter-io.cn
+export PUB_HOSTED_URL=https://mirrors.tuna.tsinghua.edu.cn/dart-pub/
+export FLUTTER_STORAGE_BASE_URL=https://mirrors.tuna.tsinghua.edu.cn/flutter
 export OBJC_DISABLE_INITIALIZE_FORK_SAFETY=YES
+export ENABLE_FLUTTER_DESKTOP=true
 
 #set env for pwntools
 export TERM=xterm-256color
 export TERMINFO=/etc/terminfo
+# xray
+export XRAY_LCIENSE_PATH=/opt/xray
 
 ############################
 # Env Path
 ############################
 # Java
-export PATH=$JAVA_HOME/bin:$PATH
-export PATH=$JAVA_HOME/bin:$PATH
+export PATH=${JAVA_HOME}/bin:$PATH
 # flutter
-export PATH=/Users/virink/Program/flutter/bin:$PATH
+export PATH=/usr/local/flutter/bin:${PATH}
 # Android
-export PATH=${ANDROID_SDK_ROOT}/tools:${PATH}
-export PATH=${ANDROID_SDK_ROOT}/platform-tools:${PATH}
+export PATH=${ANDROID_SDK_ROOT}/tools:${ANDROID_SDK_ROOT}/platform-tools:${PATH}
+# Golang
+export PATH=${GOROOT}/bin:${GOPATH}/bin:${PATH}
+
 # gnubin
 # export PATH="$(brew --prefix coreutils)/libexec/gnubin:/usr/local/bin:$PATH"
-# Golang
-export PATH=$GOROOT/bin:$GOPATH/bin:$PATH
-# Virink
-if [[ $PATH =~ "/usr/local/vbin" ]];then
-else
-  export PATH="/usr/local/vbin:$PATH"
-fi
 
-############################
-# Custom Scripts
-############################
-# vCommand add to alias
-eval $($(which vcommand) _alias)
+# intratools
+export INTRA_SESSION=vvvkkk
+
 
 ############################
 # Custom Function
 ############################
 function command_not_found_handler(){
-    if {which vcommand > /dev/null} {
+    [[ -n $DEBUG ]] && echo "[D] Command: $@"
+    if { which vcommand > /dev/null } {
         $(which vcommand) $@
     } else {
         echo "[!] zsh: command not found: $0"
@@ -125,7 +123,7 @@ function sshl(){
 
 function acmehelp(){
     local domain="$1"
-    if [ -d "~/.acme.sh" ]; then
+    if [ -d "~/.acme.sh/acme.sh" ]; then
         echo "acme.sh --issue -d \"$domain\" --dns dns_ali"
         echo "acme.sh --install-cert -d \"$domain\" --key-file \"/etc/nginx/certs/$domain.key\" --fullchain-file \"/etc/nginx/certs/$domain.pem\" --reloadcmd \"service nginx restart\""
     fi
@@ -144,6 +142,7 @@ function pac(){
         --user-rule-from="~/.vproxy/pac/user-rules.txt" \
         --output="~/.vproxy/proxy.pac"
 }
+
 function proxy(){
     if [[ "$1" = "t" ]]; then
         local url=""
@@ -190,12 +189,20 @@ function proxy(){
             brew services restart v2ray-core
         fi
     elif [[ "$1" = "l" ]]; then
-        _dir="/usr/local/etc/v2ray"
-        ls $_dir
+        ls -al /usr/local/etc/v2ray/*.json
     else
         echo -e "t\ttest\nc\tchange\nl\tlist\n"
     fi
     return $?
+}
+
+function v2log(){
+    local cmd=$1
+    if [[ $cmd == "clear" ]]; then
+        echo -n "" > /opt/log/v2ray/access.log
+        echo -n "" > /opt/log/v2ray/error.log
+    fi
+    tail -f /opt/log/v2ray/*.log
 }
 
 function rand(){
@@ -231,14 +238,9 @@ function clearnpm(){
     echo "Successfully"
 }
 
-function stvh(){
-    st ~/SourceCodes/vhost
-}
-
 function filenum(){
-    echo "There are `ls -lR|grep "^-"|wc -l`   files in `pwd`"
+    echo "There are `ls -lR|grep "^-"|wc -l` files in `pwd`"
 }
-
 
 # show my ip
 function myip(){
@@ -249,23 +251,19 @@ function myip(){
     fi
 }
 
-# Hexo action
-function mgd() {
-    local ori_path=$(pwd)
-    cd /Users/virink/Workspace/Blog
-    source `pwd`/venv/bin/activate
-    ./mweblog.py gd
-    deactivate
-    cd $ori_path
-}
-
 # Socks5 Proxy
-function ssup() {
-    export ALL_PROXY=http://127.0.0.1:1086
-}
-
-function ssdown() {
-    unset ALL_PROXY
+function ss() {
+    local proxy=$1
+    if [[ -n "$proxy" ]]; then
+        echo "Set ALL_PROXY=$proxy"
+        export ALL_PROXY="$proxy"
+    elif [ ! -n "$ALL_PROXY" ]; then
+        echo "Set ALL_PROXY=http://127.0.0.1:1086"
+        export ALL_PROXY=http://127.0.0.1:1086
+    else
+        echo "Unset ALL_PROXY"
+        unset ALL_PROXY
+    fi
 }
 
 # OfficeThinner
@@ -275,13 +273,95 @@ function clearoffice(){
 
 # dex2jar
 function dex2jar (){
-    /Users/virink/Program/dex2jar21/d2j-dex2jar.sh "$@"
+    ~/Program/dex2jar21/d2j-dex2jar.sh "$@"
 }
 
 # DiffMerge
 function diffmerge() {
     exec /Applications/DiffMerge.app/Contents/MacOS/DiffMerge --nosplash  "$@"
 }
+
+function icns(){
+    local pngName=$1
+    local output=$2
+    if [[ -n $pngName ]]; then
+        mkdir $output.iconset
+        sips -z 16 16     $pngName --out "$output".iconset/icon_16x16.png
+        sips -z 32 32     $pngName --out "$output".iconset/icon_16x16@2x.png
+        sips -z 32 32     $pngName --out "$output".iconset/icon_32x32.png
+        sips -z 64 64     $pngName --out "$output".iconset/icon_32x32@2x.png
+        sips -z 128 128   $pngName --out "$output".iconset/icon_128x128.png
+        sips -z 256 256   $pngName --out "$output".iconset/icon_128x128@2x.png
+        sips -z 256 256   $pngName --out "$output".iconset/icon_256x256.png
+        sips -z 512 512   $pngName --out "$output".iconset/icon_256x256@2x.png
+        # sips -z 512 512   pic.png --out tmp.iconset/icon_512x512.png
+        # sips -z 1024 1024   pic.png --out tmp.iconset/icon_512x512@2x.png
+        iconutil -c icns $output.iconset -o $output.icns
+        rm -rf $output.iconset
+    fi
+}
+newvkrc(){
+    echo "export VKRC_COMMAND_LIST=(" > .vkrc
+    echo ")" >> .vkrc
+    echo "" >> .vkrc
+    echo "reset_vkrc(){" >> .vkrc
+    echo "    unfunction reset_vkrc" >> .vkrc
+    echo "}" >> .vkrc
+}
+vkrcmod(){
+    # .vkrc
+    # FIXME: 子目录跳回上级目录
+    if [[ -e .vkrc ]]; then
+        export CURRENT_RC_PWD=$PWD
+        showcmd(){
+            # FIXME: not found $VKRC_COMMAND_LIST in loading
+            echo "[+] ======================"
+            for cmd in $VKRC_COMMAND_LIST; do
+                echo "[*] $cmd"
+            done
+        }
+        source .vkrc
+        echo "[+] ======================"
+        echo "[+] Found .vkrc and Loaded"
+        showcmd
+        typeset -F reset_vkrc || echo "Not Found reset_vkrc in this .vkrc"
+    fi
+
+    [[ $PWD != $CURRENT_RC_PWD* ]] && \
+        typeset -F reset_vkrc && \
+        unset CURRENT_RC_PWD && unset VKRC_COMMAND_LIST && reset_vkrc
+}
+
+function chpwd(){
+    vkrcmod
+}
+
+function uniq_path(){
+    local paths=($(echo $PATH | tr ':' " "))
+    local new_path=()
+    for p in $paths; do
+        local skip=0
+        for np in $new_path; do
+            if [[ $np = $p ]]; then
+                skip=1
+                break
+            fi
+        done
+        if [[ $skip = 1 ]]; then
+            continue
+        fi
+        new_path=($new_path $p)
+    done
+    echo $new_path | tr ' ' ":"
+}
+
+############################
+# Custom Scripts
+############################
+export PATH=$(uniq_path)
+
+# vCommand add to alias
+eval $($(which vcommand) _alias)
 
 ############################
 # alias
@@ -296,17 +376,15 @@ alias ll='ls -alh'
 alias grep="grep --color=auto"
 alias vi='vim'
 alias rm='trash'
+alias sed='LANG=C LC_CTYPE=C sed'
 # Clear
 alias cls='clear'
 alias clspjt='clearpjt'
 alias clsnpm='clearnpm'
 
-alias sed='LANG=C LC_CTYPE=C sed'
 # alias electron='/Applications/Electron.app/Contents/MacOS/Electron'
 alias javac="javac -J-Dfile.encoding=utf8"
 alias service='brew services'
-# Tree
-alias tree="find . -print | sed -e 's;[^/]*/;|____;g;s;____|; |;g'"
 # Language
 alias lgbk='export LANG=zh_CN.GBK'
 # alias lutf8='export lang=zh_CN.UTF-8'
@@ -314,14 +392,20 @@ alias lutf8='export LANG=en_US.UTF-8'
 # Nasm
 alias nasmd='nasm -f macho64'
 alias ldd='ld -e _start'
-
+# docker-compose
 alias dcp='docker-compose'
 
+# github
+alias git=hub
+
+# php composer
+alias composer='composer -vvv'
+
+# nodejs npm
 alias onpm=/usr/local/bin/npm
 alias npm=/usr/local/bin/cnpm
 
 alias luarocks='luarocks --lua-dir=/usr/local/opt/lua@5.1'
-alias luarocks51='luarocks --lua-dir=/usr/local/opt/lua@5.1'
 
 # Proxy
 alias stpac="st ~/.vproxy/pac/user-rules.txt"
@@ -336,7 +420,14 @@ alias chromeport="gchrome --args --explicitly-allowed-ports="
 
 alias vv='source `pwd`/venv/bin/activate'
 
-alias codeql='/Users/virink/Program/codeql/codeql'
-alias pcscli='pcs-console'
+alias codeql='/opt/codeql/codeql'
 alias vscode="/Applications/Visual Studio Code.app/Contents/Resources/app/bin/code"
 alias vsc=vscode
+
+alias xray=/opt/xray/xray
+alias py3=/usr/local/bin/python3
+alias py=py3
+alias py2=/usr/local/bin/python2
+alias virtualenv='python3 -m virtualenv'
+
+alias gotmp='cd ~/Workspace/tmp/go-playground'

@@ -1,28 +1,36 @@
 # Git info
 local git_info='$(git_prompt_info)'
-ZSH_THEME_GIT_PROMPT_PREFIX="%{$fg[yellow]%}On%{$reset_color%} %{$fg_bold[blue]%}git:(%{$fg[red]%}"
-ZSH_THEME_GIT_PROMPT_SUFFIX="%{$reset_color%} "
-ZSH_THEME_GIT_PROMPT_DIRTY="%{$fg[blue]%}) %{$fg[yellow]%}✗"
-ZSH_THEME_GIT_PROMPT_CLEAN="%{$fg[blue]%})"
+ZSH_THEME_GIT_PROMPT_PREFIX="%{$fg_bold[white]%}♆ (%{$fg[magenta]%}"
+ZSH_THEME_GIT_PROMPT_SUFFIX="%{$fg_bold[white]%})%{$reset_color%} "
+ZSH_THEME_GIT_PROMPT_CLEAN=" %{$fg[green]%}✓"
+ZSH_THEME_GIT_PROMPT_DIRTY=" %{$fg[red]%}✗"
 
-local exit_code="%(?,,%{$fg[red]%}LEC:%{$fg[red]%}%?%{$reset_color%})"
+ZSH_THEME_GIT_PROMPT_MODIFIED="%{$fg[yellow]%}﹡"
+ZSH_THEME_GIT_PROMPT_ADDED="%{$fg[yellow]%}✚"
+ZSH_THEME_GIT_PROMPT_DELETED="%{$fg[yellow]%}✖"
+
+
+local privileges="%{$fg_bold[green]%}➜"
+
+local user_name="%(#,%{$bg[red]%}%{$fg[white]%}%n,%{$fg[magenta]%}%n)"
+
+local machine_name="%{$fg[magenta]%}%m"
+
+local user_at_machine="${user_name} %{$fg[white]%}@ ${machine_name}"
+
+local relative_directory="$fg_bold[cyan]%}%~%{$reset_color%}"
+
+local date_time="%{$fg_bold[blue]%}[%{$fg[yellow]%}%D{%Y-%m-%d %I:%M:%S}%{$fg_bold[blue]%}]"
+
+local exit_code="%(?,,%{$fg[red]%}LEC:%?)"
+
+local command="%{$fg_bold[red]%}$"
 
 # Prompt format:
 #
-# ➜ PRIVILEGES USER @ MACHINE in DIRECTORY on git:BRANCH STATE LEC:LAST_EXIT_CODE
+# ➜ PRIVILEGES USER@MACHINE DIRECTORY ♆ (BRANCH STATE) DATETIME LEC:LAST_EXIT_CODE
 # $ COMMAND
 #
-# For example:
-#
-# % ys @ ys-mbp in ~/.oh-my-zsh on git:master x LEC:0
-# $
 
-PROMPT="%(?:%{$fg_bold[green]%}➜ :%{$fg_bold[red]%}➜ ) \
-%(#,%{$bg[red]%}%{$fg[white]%} %n %{$reset_color%},%{$fg[magenta]%}%n) \
-%{$fg[white]%}@ \
-%{$fg[magenta]%}%m \
-%{$fg[yellow]%}In \
-%{$terminfo[bold]$fg[cyan]%}%~%{$reset_color%} \
-${git_info} \
-$exit_code
-%{$terminfo[bold]$fg[red]%}$ %{$reset_color%}"
+PROMPT="${privileges} ${user_at_machine} ${relative_directory} ${git_info} ${date_time} ${exit_code}
+${command} %{$reset_color%}"
